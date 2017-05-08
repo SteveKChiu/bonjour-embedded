@@ -1,0 +1,38 @@
+{
+global:
+	DNSServiceRefSockFD;
+	DNSServiceProcessResult;
+	DNSServiceRefDeallocate;
+	DNSServiceEnumerateDomains;
+	DNSServiceRegister;
+	DNSServiceAddRecord;
+	DNSServiceUpdateRecord;
+	DNSServiceRemoveRecord;
+	DNSServiceBrowse;
+	DNSServiceResolve;
+	DNSServiceConstructFullName;
+	DNSServiceCreateConnection;
+	DNSServiceRegisterRecord;
+	DNSServiceQueryRecord;
+	DNSServiceReconfirmRecord;
+	DNSServiceNATPortMappingCreate;
+	DNSServiceGetAddrInfo;
+	DNSServiceGetProperty;
+	TXTRecordCreate;
+	TXTRecordDeallocate;
+	TXTRecordSetValue;
+	TXTRecordRemoveValue;
+	TXTRecordContainsKey;
+	TXTRecordGetCount;
+	TXTRecordGetLength;
+	TXTRecordGetBytesPtr;
+	TXTRecordGetValuePtr;
+	TXTRecordGetItemAtIndex;
+	DNSResponderSetLogProc;
+	DNSResponderInit;
+	DNSResponderProcess;
+	DNSResponderExit;
+
+local:
+	*;
+};
