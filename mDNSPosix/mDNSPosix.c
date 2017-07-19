@@ -1511,8 +1511,19 @@ mDNSexport void    mDNSPlatformMemZero(void *dst, mDNSu32 len)
     memset(dst, 0, len);
 }
 
-mDNSexport void *  mDNSPlatformMemAllocate(mDNSu32 len) { return(malloc(len)); }
-mDNSexport void    mDNSPlatformMemFree    (void *mem)   { free(mem); }
+mDNSexport void* mDNSPlatformMemAllocate(mDNSu32 len)
+{
+    void* p = malloc(len);
+    if (p) {
+        memset(p, 0, len);
+    }
+    return p;
+}
+
+mDNSexport void mDNSPlatformMemFree(void *mem)
+{
+    free(mem);
+}
 
 mDNSexport mDNSu32 mDNSPlatformRandomSeed(void)
 {

@@ -754,6 +754,10 @@ mDNSexport void *	mDNSPlatformMemAllocate( mDNSu32 inSize )
 	mem = malloc( inSize );
 	check( mem );
 	
+    if (mem) {
+        memset(mem, 0, inSize);
+    }
+
 	return( mem );
 }
 

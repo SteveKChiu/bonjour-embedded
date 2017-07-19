@@ -1,2 +1,7 @@
-INCLUDEPATH += $$PWD
-!macx:LIBS += -lbonjour
+INCLUDEPATH += \
+    $$PWD
+
+!macx {
+    LIBS += -L$$OUT_PWD/../../bin
+    LIBS += -lbonjour
+}

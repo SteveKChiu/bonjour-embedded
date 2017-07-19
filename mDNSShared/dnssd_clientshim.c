@@ -412,7 +412,7 @@ DNSServiceErrorType DNSServiceBrowse
 
     // Check parameters
     if (!regtype[0] || !MakeDomainNameFromDNSNameString(&t, regtype))      { errormsg = "Illegal regtype"; goto badparam; }
-    if (!MakeDomainNameFromDNSNameString(&d, *domain ? domain : "local.")) { errormsg = "Illegal domain";  goto badparam; }
+    if (!MakeDomainNameFromDNSNameString(&d, domain && *domain ? domain : "local.")) { errormsg = "Illegal domain";  goto badparam; }
 
     // Allocate memory, and handle failure
     x = (mDNS_DirectOP_Browse *)mDNSPlatformMemAllocate(sizeof(*x));
