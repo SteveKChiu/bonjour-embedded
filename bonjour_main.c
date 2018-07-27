@@ -96,7 +96,12 @@ DNSServiceErrorType DNSResponderInit(void)
 void DNSResponderExit(void)
 {
     if (_inited) {
-        mDNS_Close(&mDNSStorage);
+        int i = 5;
+        mDNS_StartExit(&mDNSStorage);
+        while (i-- > 0) {
+            DNSResponderProcess(500);
+        }
+        mDNS_FinalExit(&mDNSStorage);
         _inited = 0;
     }
 }

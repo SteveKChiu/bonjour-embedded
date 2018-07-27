@@ -52,6 +52,7 @@
 
 #include "mDNSUNP.h"
 #include "GenLinkedList.h"
+#include "dnsproxy.h"
 
 // ***************************************************************************
 // Structures
@@ -311,9 +312,8 @@ mDNSlocal void SocketDataReady(mDNS *const m, PosixNetworkInterface *intf, int s
                         &senderAddr, senderPort, &destAddr, MulticastDNSPort, InterfaceID);
 }
 
-mDNSexport TCPSocket *mDNSPlatformTCPSocket(mDNS * const m, TCPSocketFlags flags, mDNSIPPort * port, mDNSBool useBackgroundTrafficClass)
+mDNSexport TCPSocket *mDNSPlatformTCPSocket(TCPSocketFlags flags, mDNSIPPort * port, mDNSBool useBackgroundTrafficClass)
 {
-    (void)m;            // Unused
     (void)flags;        // Unused
     (void)port;         // Unused
     (void)useBackgroundTrafficClass; // Unused
@@ -368,9 +368,8 @@ mDNSexport long mDNSPlatformWriteTCP(TCPSocket *sock, const char *msg, unsigned 
     return 0;
 }
 
-mDNSexport UDPSocket *mDNSPlatformUDPSocket(mDNS * const m, mDNSIPPort port)
+mDNSexport UDPSocket *mDNSPlatformUDPSocket(mDNSIPPort port)
 {
-    (void)m;            // Unused
     (void)port;         // Unused
     return NULL;
 }
@@ -380,9 +379,8 @@ mDNSexport void           mDNSPlatformUDPClose(UDPSocket *sock)
     (void)sock;         // Unused
 }
 
-mDNSexport void mDNSPlatformUpdateProxyList(mDNS *const m, const mDNSInterfaceID InterfaceID)
+mDNSexport void mDNSPlatformUpdateProxyList(const mDNSInterfaceID InterfaceID)
 {
-    (void)m;            // Unused
     (void)InterfaceID;          // Unused
 }
 
@@ -393,9 +391,8 @@ mDNSexport void mDNSPlatformSendRawPacket(const void *const msg, const mDNSu8 *c
     (void)InterfaceID;          // Unused
 }
 
-mDNSexport void mDNSPlatformSetLocalAddressCacheEntry(mDNS *const m, const mDNSAddr *const tpa, const mDNSEthAddr *const tha, mDNSInterfaceID InterfaceID)
+mDNSexport void mDNSPlatformSetLocalAddressCacheEntry(const mDNSAddr *const tpa, const mDNSEthAddr *const tha, mDNSInterfaceID InterfaceID)
 {
-    (void)m;            // Unused
     (void)tpa;          // Unused
     (void)tha;          // Unused
     (void)InterfaceID;          // Unused
@@ -410,9 +407,8 @@ mDNSexport void mDNSPlatformTLSTearDownCerts(void)
 {
 }
 
-mDNSexport void mDNSPlatformSetAllowSleep(mDNS *const m, mDNSBool allowSleep, const char *reason)
+mDNSexport void mDNSPlatformSetAllowSleep(mDNSBool allowSleep, const char *reason)
 {
-    (void) m;
     (void) allowSleep;
     (void) reason;
 }
@@ -434,10 +430,9 @@ mDNSexport void FreeEtcHosts(mDNS *const m, AuthRecord *const rr, mStatus result
 #pragma mark ***** DDNS Config Platform Functions
 #endif
 
-mDNSexport mDNSBool mDNSPlatformSetDNSConfig(mDNS *const m, mDNSBool setservers, mDNSBool setsearch, domainname *const fqdn, DNameListElem **RegDomains,
+mDNSexport mDNSBool mDNSPlatformSetDNSConfig(mDNSBool setservers, mDNSBool setsearch, domainname *const fqdn, DNameListElem **RegDomains,
     DNameListElem **BrowseDomains, mDNSBool ackConfig)
 {
-    (void) m;
     (void) setservers;
     (void) fqdn;
     (void) setsearch;
@@ -448,9 +443,8 @@ mDNSexport mDNSBool mDNSPlatformSetDNSConfig(mDNS *const m, mDNSBool setservers,
     return mDNStrue;
 }
 
-mDNSexport mStatus mDNSPlatformGetPrimaryInterface(mDNS * const m, mDNSAddr * v4, mDNSAddr * v6, mDNSAddr * router)
+mDNSexport mStatus mDNSPlatformGetPrimaryInterface(mDNSAddr * v4, mDNSAddr * v6, mDNSAddr * router)
 {
-    (void) m;
     (void) v4;
     (void) v6;
     (void) router;
@@ -505,7 +499,7 @@ mDNSexport int ParseDNSServers(mDNS *m, const char *filePath)
             mDNSAddr DNSAddr;
             DNSAddr.type = mDNSAddrType_IPv4;
             DNSAddr.ip.v4.NotAnInteger = ina.s_addr;
-            mDNS_AddDNSServer(m, NULL, mDNSInterface_Any, 0, &DNSAddr, UnicastDNSPort, kScopeNone, 0, mDNSfalse, 0, mDNStrue, mDNStrue, mDNSfalse);
+            mDNS_AddDNSServer(m, NULL, mDNSInterface_Any, 0, &DNSAddr, UnicastDNSPort, kScopeNone, 0, mDNSfalse, mDNSfalse, 0, mDNStrue, mDNStrue, mDNSfalse);
             numOfServers++;
         }
     }
@@ -605,7 +599,7 @@ mDNSlocal void ClearInterfaceList(mDNS *const m)
     while (m->HostInterfaces)
     {
         PosixNetworkInterface *intf = (PosixNetworkInterface*)(m->HostInterfaces);
-        mDNS_DeregisterInterface(m, &intf->coreIntf, mDNSfalse);
+        mDNS_DeregisterInterface(m, &intf->coreIntf, NormalActivation);
         if (gMDNSPlatformPosixVerboseLevel > 0) fprintf(stderr, "Deregistered interface %s\n", intf->intfName);
         FreePosixNetworkInterface(intf);
     }
@@ -935,7 +929,7 @@ mDNSlocal int SetupOneInterface(mDNS *const m, struct sockaddr *intfAddr, struct
 
     // The interface is all ready to go, let's register it with the mDNS core.
     if (err == 0)
-        err = mDNS_RegisterInterface(m, &intf->coreIntf, mDNSfalse);
+        err = mDNS_RegisterInterface(m, &intf->coreIntf, NormalActivation);
 
     // Clean up.
     if (err == 0)
@@ -1260,6 +1254,9 @@ mDNSlocal mStatus WatchForInterfaceChange(mDNS *const m)
 // we just need to be aware that we shouldn't expect to successfully receive unicast UDP responses.
 mDNSlocal mDNSBool mDNSPlatformInit_CanReceiveUnicast(void)
 {
+#ifdef UNICAST_DISABLED
+    return mDNSfalse;
+#else
     int err;
     int s = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     struct sockaddr_in s5353;
@@ -1271,6 +1268,7 @@ mDNSlocal mDNSBool mDNSPlatformInit_CanReceiveUnicast(void)
     if (err) debugf("No unicast UDP responses");
     else debugf("Unicast UDP responses okay");
     return(err == 0);
+#endif
 }
 
 // mDNS core calls this routine to initialise the platform-specific data.
@@ -1492,16 +1490,14 @@ mDNSexport mDNSu8 *DNSProxySetAttributes(DNSQuestion *q, DNSMessageHeader *h, DN
     return ptr;
 }
 
-mDNSexport void DNSProxyInit(mDNS *const m, mDNSu32 IpIfArr[], mDNSu32 OpIf)
+mDNSexport void DNSProxyInit(mDNSu32 IpIfArr[], mDNSu32 OpIf)
 {
-    (void) m;
     (void) IpIfArr;
     (void) OpIf;
 }
 
-mDNSexport void DNSProxyTerminate(mDNS *const m)
+mDNSexport void DNSProxyTerminate(void)
 {
-    (void) m;
 }
 
 // mDNS core calls this routine to clear blocks of memory.
@@ -1525,12 +1521,19 @@ mDNSexport void mDNSPlatformMemFree(void *mem)
     free(mem);
 }
 
+#if _PLATFORM_HAS_STRONG_PRNG_
+mDNSexport mDNSu32 mDNSPlatformRandomNumber(void)
+{
+	return(arc4random());
+}
+#else
 mDNSexport mDNSu32 mDNSPlatformRandomSeed(void)
 {
     struct timeval tv;
     gettimeofday(&tv, NULL);
     return(tv.tv_usec);
 }
+#endif
 
 mDNSexport mDNSs32 mDNSPlatformOneSecond = 1024;
 
@@ -1560,9 +1563,8 @@ mDNSexport mDNSs32 mDNSPlatformUTC(void)
     return time(NULL);
 }
 
-mDNSexport void mDNSPlatformSendWakeupPacket(mDNS *const m, mDNSInterfaceID InterfaceID, char *EthAddr, char *IPAddr, int iteration)
+mDNSexport void mDNSPlatformSendWakeupPacket(mDNSInterfaceID InterfaceID, char *EthAddr, char *IPAddr, int iteration)
 {
-    (void) m;
     (void) InterfaceID;
     (void) EthAddr;
     (void) IPAddr;
@@ -1603,9 +1605,8 @@ mDNSexport void mDNSPlatformSendKeepalive(mDNSAddr *sadd, mDNSAddr *dadd, mDNSIP
     (void) win;     // Unused
 }
 
-mDNSexport mStatus mDNSPlatformRetrieveTCPInfo(mDNS *const m, mDNSAddr *laddr, mDNSIPPort *lport, mDNSAddr *raddr, mDNSIPPort *rport, mDNSTCPInfo *mti)
+mDNSexport mStatus mDNSPlatformRetrieveTCPInfo(mDNSAddr *laddr, mDNSIPPort *lport, mDNSAddr *raddr, mDNSIPPort *rport, mDNSTCPInfo *mti)
 {
-    (void) m;       // Unused
     (void) laddr;   // Unused
     (void) raddr;   // Unused
     (void) lport;   // Unused
@@ -1615,10 +1616,9 @@ mDNSexport mStatus mDNSPlatformRetrieveTCPInfo(mDNS *const m, mDNSAddr *laddr, m
     return mStatus_NoError;
 }
 
-mDNSexport mStatus mDNSPlatformGetRemoteMacAddr(mDNS *const m, mDNSAddr *raddr)
+mDNSexport mStatus mDNSPlatformGetRemoteMacAddr(mDNSAddr *raddr)
 {
     (void) raddr; // Unused
-    (void) m;     // Unused
 
     return mStatus_NoError;
 }

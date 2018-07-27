@@ -1,4 +1,4 @@
-# based on apple bonjour mDNSResponder-765.30.11
+# based on apple bonjour mDNSResponder-878.30.4
 
 TEMPLATE = lib
 CONFIG += warn_off
@@ -11,7 +11,7 @@ DEFINES += \
     PID_FILE=\\\"\\\" \
     PLATFORM_NO_RLIMIT \
     _LEGACY_NAT_TRAVERSAL_
-
+    
 INCLUDEPATH += \
     mDNSCore \
     mDNSShared
@@ -30,6 +30,14 @@ SOURCES += \
     mDNSMacOSX/LegacyNATTraversal.c \
     bonjour_main.c \
     bonjour_shim.c
+
+equals(BONJOUR_DEBUG, 1) {
+    DEFINES += \
+        DEBUG
+
+    SOURCES += \
+        mDNSShared/DebugServices.c
+}
 
 win32 {
     DEFINES += \
